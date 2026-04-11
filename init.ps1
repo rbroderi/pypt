@@ -302,7 +302,6 @@ prek-init:
     if (-not (Test-Path 'pyproject.toml')) { throw 'pyproject.toml not found. Run just init first.' }; \
     $projectNameMatch = Select-String -Path 'pyproject.toml' -Pattern '^\s*name\s*=\s*"([^\"]+)"' -AllMatches | Select-Object -First 1; if (-not $projectNameMatch -or $projectNameMatch.Matches.Count -eq 0) { throw 'project.name not found in pyproject.toml.' }; $projectName = $projectNameMatch.Matches[0].Groups[1].Value; \
     $packageName = $projectName -replace '-', '_'; \
-    if (-not $packageName) { throw 'Unable to derive package name from project.name.' }; Write-Host ('Using package name: ' + $packageName); \
     uv add --optional dev prek; \
     $lines = @( \
     'default_language_version:', \
@@ -464,9 +463,7 @@ prek-init:
     '        stages: [pre-commit]', \
     '      - id: coverage-100', \
     '        name: coverage-100', \
-    '        entry: |', \
-    ('          uv run pytest --doctest-modules --cov=src/' + $packageName + ' \\'), \
-    '            --cov-report=term-missing --cov-fail-under=100', \
+    ('        entry: uv run pytest --doctest-modules --cov=src/' + $packageName + ' --cov-report=term-missing --cov-fail-under=100 src/' + $packageName), \
     '        language: system', \
     '        pass_filenames: false', \
     '        always_run: true', \
@@ -503,24 +500,19 @@ github-actions-init:
 
     $cleanJustContent = @'
 clean:
-    $confirmation = Read-Host 'Are you sure you want to clean out all files in this directory? Type "delete my stuff" to continue'; \
+        $confirmation = Read-Host 'Are you sure you want to clean this project directory? Type "delete my stuff" to continue'; \
     if ($confirmation -ne 'delete my stuff') { throw 'Clean cancelled.' }; \
-    $root = (Get-Location).Path; \
-    $items = Get-ChildItem -LiteralPath $root -Force -Recurse | Sort-Object FullName -Descending; \
+        $root = (Resolve-Path '.').Path; \
+        if (-not (Test-Path (Join-Path $root 'pyproject.toml'))) { throw 'Refusing to clean: run this only from a project root (pyproject.toml required).' }; \
+        $protected = @( \
+        (Join-Path $root 'init.ps1') \
+        ); \
+        $items = Get-ChildItem -LiteralPath $root -Force; \
     foreach ($item in $items) { \
-    if ($item.PSIsContainer) { \
-    $containsInit = @(Get-ChildItem -LiteralPath $item.FullName -Force -Recurse -Filter 'init.ps1' -ErrorAction SilentlyContinue).Count -gt 0; \
-    if (-not $containsInit) { Remove-Item -LiteralPath $item.FullName -Recurse -Force -ErrorAction SilentlyContinue } \
-    } else { \
-    if ($item.Name -ne 'init.ps1') { Remove-Item -LiteralPath $item.FullName -Force -ErrorAction SilentlyContinue } \
-    } \
+        if ($protected -contains $item.FullName) { continue }; \
+        Remove-Item -LiteralPath $item.FullName -Recurse -Force -ErrorAction SilentlyContinue; \
     }; \
-    Get-ChildItem -LiteralPath $root -Force | Where-Object { $_.PSIsContainer } | ForEach-Object { \
-    $containsInit = @(Get-ChildItem -LiteralPath $_.FullName -Force -Recurse -Filter 'init.ps1' -ErrorAction SilentlyContinue).Count -gt 0; \
-    if (-not $containsInit) { Remove-Item -LiteralPath $_.FullName -Recurse -Force -ErrorAction SilentlyContinue } \
-    }; \
-    Get-ChildItem -LiteralPath $root -Force | Where-Object { -not $_.PSIsContainer -and $_.Name -ne 'init.ps1' } | Remove-Item -Force -ErrorAction SilentlyContinue; \
-    Write-Host 'Clean complete. Kept only init.ps1 file(s).'
+        Write-Host ('Clean complete for ' + $root + '. Protected root files: init.ps1.')
 '@
 
     Set-Content -Path $licenseJustPath -Value $licenseJustContent -Encoding UTF8
