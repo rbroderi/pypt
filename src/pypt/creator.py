@@ -15,29 +15,112 @@ from typing import NamedTuple
 
 _SCANCODE_INDEX_URL = "https://scancode-licensedb.aboutcode.org/index.json"
 _SCANCODE_BASE_URL = "https://scancode-licensedb.aboutcode.org/"
-
-_LICENSE_CLASSIFIERS: dict[str, str] = {
-    "MIT": "License :: OSI Approved :: MIT License",
-    "Apache-2.0": "License :: OSI Approved :: Apache Software License",
-    "BSD-3-Clause": "License :: OSI Approved :: BSD License",
-    "BSD-2-Clause": "License :: OSI Approved :: BSD License",
-    "LGPL-3.0": "License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)",
-    "LGPL-3.0-or-later": "License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)",
-    "LGPL-2.1": "License :: OSI Approved :: GNU Lesser General Public License v2 or later (LGPLv2+)",
-    "LGPL-2.1-or-later": "License :: OSI Approved :: GNU Lesser General Public License v2 or later (LGPLv2+)",
-    "GPL-3.0": "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
-    "GPL-3.0-or-later": "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
-    "GPL-2.0": "License :: OSI Approved :: GNU General Public License v2 or later (GPLv2+)",
-    "GPL-2.0-or-later": "License :: OSI Approved :: GNU General Public License v2 or later (GPLv2+)",
-    "AGPL-3.0": "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
-    "AGPL-3.0-or-later": "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
-    "MPL-2.0": "License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)",
-    "ISC": "License :: OSI Approved :: ISC License (ISCL)",
-    "Unlicense": "License :: Public Domain",
-}
+_PYPI_CLASSIFIERS_URL = "https://pypi.org/pypi?%3Aaction=list_classifiers"
 
 _DEFAULT_LICENSE_ID = "LGPL-3.0-or-later"
-_DEFAULT_LICENSE_CLASSIFIER = _LICENSE_CLASSIFIERS[_DEFAULT_LICENSE_ID]
+
+# Module-level cache so we only fetch the PyPI classifiers once per invocation.
+_pypi_license_classifiers_cache: list[str] | None = None
+
+
+def _fetch_pypi_license_classifiers() -> list[str]:
+    """Fetch ``License ::`` trove classifiers from PyPI (cached)."""
+    global _pypi_license_classifiers_cache  # noqa: PLW0603
+    if _pypi_license_classifiers_cache is None:
+        try:
+            with urllib.request.urlopen(_PYPI_CLASSIFIERS_URL, timeout=30) as resp:  # noqa: S310
+                raw = resp.read().decode("utf-8")
+        except Exception as exc:  # noqa: BLE001
+            print(f"warning: could not fetch PyPI classifiers ({exc}); falling back to 'Other/Proprietary'.", file=sys.stderr)
+            _pypi_license_classifiers_cache = []
+            return _pypi_license_classifiers_cache
+        _pypi_license_classifiers_cache = [
+            line.strip() for line in raw.splitlines() if line.strip().startswith("License ::")
+        ]
+    return _pypi_license_classifiers_cache
+
+
+def _match_pypi_classifier(spdx_key: str, classifiers: list[str]) -> str:
+    """Return the best-matching PyPI ``License ::`` classifier for *spdx_key*.
+
+    Matching strategy:
+    * Extract the base acronym, major version, and "or-later" flag from the
+      SPDX key (e.g. ``LGPL-3.0-or-later`` → base=``LGPL``, version=``3``,
+      or_later=``True``).
+    * For each candidate classifier, score it:
+      - +10 if the parenthetical abbreviation starts with the base acronym
+        (e.g. ``(LGPLv3+)`` starts with ``LGPL``).
+      - +3  if the base acronym appears as a whole word in the classifier text.
+      - +1  if the base acronym appears anywhere in the text (weak signal).
+      - +5  if the major version number matches.
+      - -8  if the SPDX key has no version but the abbreviation has digits
+        (avoids matching ``MIT-0`` when the user asked for ``MIT``).
+      - +3  if or_later matches "or later" in the classifier.
+      - -2  if or_later is True but the classifier lacks "or later".
+      - +1  for a slight preference toward exact-version classifiers when
+        or_later is False.
+    * Fall back to ``License :: Other/Proprietary License`` when nothing fits.
+    """
+    # Special-case licenses with no natural OSI classifier
+    key_lower = spdx_key.lower()
+    if key_lower in ("unlicense", "cc0-1.0", "cc0"):
+        for cls in classifiers:
+            if "public domain" in cls.lower():
+                return cls
+        return "License :: Other/Proprietary License"
+
+    base_match = re.match(r"^([A-Za-z]+)", spdx_key)
+    if not base_match:
+        return "License :: Other/Proprietary License"
+    base = base_match.group(1).upper()
+
+    version_match = re.search(r"(\d+)(?:\.\d+)?", spdx_key)
+    version = version_match.group(1) if version_match else None
+
+    or_later = "or-later" in key_lower or key_lower.endswith("+")
+
+    best_cls = "License :: Other/Proprietary License"
+    best_score = -1
+
+    for cls in classifiers:
+        abbrev = ""
+        m = re.search(r"\(([^)]+)\)", cls)
+        if m:
+            abbrev = m.group(1).upper()
+
+        score = 0
+        if abbrev.startswith(base):
+            score += 10
+        elif re.search(r"\b" + re.escape(base) + r"\b", cls.upper()):
+            score += 3
+        elif base in cls.upper():
+            score += 1
+        else:
+            continue  # no signal at all – skip
+
+        if version:
+            if re.search(r"\bV?" + re.escape(version) + r"\b", cls.upper()):
+                score += 5
+        else:
+            # SPDX key has no version: penalise classifiers whose abbreviation
+            # contains digits (e.g. avoid picking "MIT-0" for plain "MIT").
+            if abbrev and re.search(r"\d", abbrev):
+                score -= 8
+
+        if or_later:
+            if "or later" in cls.lower():
+                score += 3
+            else:
+                score -= 2
+        else:
+            if "or later" not in cls.lower():
+                score += 1
+
+        if score > best_score:
+            best_score = score
+            best_cls = cls
+
+    return best_cls
 
 
 def _load_template(relative_path: str) -> str:
@@ -136,7 +219,7 @@ def write_pyproject(
         version=f"{today}.00",
         description=description,
         license_id=_DEFAULT_LICENSE_ID,
-        license_classifier=_DEFAULT_LICENSE_CLASSIFIER,
+        license_classifier=_get_license_classifier(_DEFAULT_LICENSE_ID),
         author_name=author.name,
         author_email=author.email,
         python_version=python_version,
@@ -260,8 +343,8 @@ def setup_github_actions(project_dir: Path, python_version: str) -> None:
 
 
 def _get_license_classifier(spdx_key: str) -> str:
-    """Return the PyPI trove classifier for a given SPDX license key."""
-    return _LICENSE_CLASSIFIERS.get(spdx_key, "License :: Other/Proprietary License")
+    """Return the best-matching PyPI trove classifier for a given SPDX license key."""
+    return _match_pypi_classifier(spdx_key, _fetch_pypi_license_classifiers())
 
 
 def _update_pyproject_license(project_dir: Path, spdx_name: str, python_version: str) -> None:
