@@ -1,0 +1,39 @@
+# {{package_name}}
+
+Reference documentation for `{{package_name}}`.
+
+## Install
+
+```bash
+pip install {{package_name}}
+```
+
+Or with uv:
+
+```bash
+uv add {{package_name}}
+```
+
+## CLI quick start
+
+```bash
+# Show CLI help (if your project exposes a CLI)
+python -m {{package_name}} --help
+```
+
+## Python API
+
+See [Python API](python-api.md) for import examples and advanced usage.
+
+## Development docs
+
+```bash
+# Install docs and development dependencies
+uv sync --extra docs --extra dev
+
+# Build docs
+just docs-build
+
+# Serve docs locally
+just docs-serve
+```
