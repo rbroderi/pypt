@@ -7,26 +7,25 @@ runnable with a single command:
 uvx pypt my-project
 ```
 
-`pypt` is the Python replacement for `init.ps1`.
-It scaffolds a fully-configured Python project using the same conventions seen in
-[Repo2xml](https://github.com/rbroderi/Repo2xml).
+It scaffolds a fully-configured Python project.
 
 ## Features
 
 - Runs `uv init --lib` to create the project skeleton
 - Writes an opinionated `pyproject.toml`
-  (calver, beartype, ruff, basedpyright, ty, coverage)
+  (calver, beartype, ruff, basedpyright, pyrefly, coverage)
 - Creates a smoke test under `src/<package>/tests/`
 - Creates a virtual environment via `uv venv`
 - Creates `.gitignore`, `.yamllint`, and `.vscode/settings.json`
-- Creates a single root `justfile` with quality, test, docs, and build recipes
+- Creates a single root `justfile`
+  with quality, test, docs, and build recipes
 - Creates docs/build scaffolding (`docs/`, `docs_sphinx/`, `zensical.toml`, `build.spec`)
 - Creates `.secrets.baseline` alongside pre-commit config for detect-secrets
 - Optionally downloads a license from [scancode-licensedb](https://scancode-licensedb.aboutcode.org/)
 - Optionally installs [prek](https://github.com/rbroderi/prek)
   and writes `.pre-commit-config.yaml`
-  with all checks from Repo2xml
-  (ssort, ruff, basedpyright, ty, vulture, deptry, pip-audit, coverage-100, …)
+  (ssort, ruff, basedpyright, pyrefly,
+  vulture, deptry, pip-audit, coverage-100, …)
 - Optionally generates GitHub Actions workflows
   (lint-format, tests, typecheck, quality-security, publish-pypi, docs)
   and `dependabot.yml`
@@ -102,5 +101,5 @@ src/pypt/templates/
         └── typecheck.yml.tmpl
 ```
 
-Template variables use `{{VARNAME}}` syntax. Add or modify templates to customise
+Template variables use `{{VARNAME}}` syntax. Add or modify templates to customize
 generated output for every new project.

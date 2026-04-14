@@ -1,4 +1,5 @@
-set shell := ["powershell", "-NoProfile", "-Command"]
+set shell := ["sh", "-cu"]
+set windows-shell := ["powershell", "-NoProfile", "-Command"]
 
 _default:
     @just --list
@@ -20,7 +21,7 @@ test:
 
 # Run tests with coverage report.
 test-cov:
-    $projectNameMatch = Select-String -Path 'pyproject.toml' -Pattern '^name\s*=\s*"([^\"]+)"' -AllMatches | Select-Object -First 1; if (-not $projectNameMatch -or $projectNameMatch.Matches.Count -eq 0) { throw 'project.name not found in pyproject.toml.' }; $packageName = $projectNameMatch.Matches[0].Groups[1].Value -replace '-', '_'; uv run pytest --doctest-modules --cov=('src/' + $packageName) --cov-report=term-missing
+    uv run python -c "import pathlib,re,pytest; c=pathlib.Path('pyproject.toml').read_text(encoding='utf-8'); m=re.search(r'(?m)^name\\s*=\\s*\"([^\"]+)\"', c); assert m, 'project.name not found in pyproject.toml.'; p=m.group(1).replace('-', '_'); raise SystemExit(pytest.main(['--doctest-modules', f'--cov=src/{p}', '--cov-report=term-missing']))"
 
 # Build documentation site.
 docs-build:
@@ -36,11 +37,7 @@ docs-serve:
 
 # Generate and build API docs with Sphinx.
 sphinx-build:
-    if (Test-Path docs_sphinx/apidoc) { Remove-Item -Recurse -Force docs_sphinx/apidoc }
-    if (Test-Path docs/api) { Remove-Item -Recurse -Force docs/api }
-    $env:SPHINX_APIDOC_OPTIONS = "show-inheritance"
-    $projectNameMatch = Select-String -Path 'pyproject.toml' -Pattern '^name\s*=\s*"([^\"]+)"' -AllMatches | Select-Object -First 1; if (-not $projectNameMatch -or $projectNameMatch.Matches.Count -eq 0) { throw 'project.name not found in pyproject.toml.' }; $packageName = $projectNameMatch.Matches[0].Groups[1].Value -replace '-', '_'; uv run sphinx-apidoc -f --remove-old -o docs_sphinx/apidoc ('src/' + $packageName) ('src/' + $packageName + '/tests')
-    uv run sphinx-build -b html docs_sphinx docs/api
+    uv run python -c "import os,pathlib,re,shutil,subprocess; shutil.rmtree('docs_sphinx/apidoc', ignore_errors=True); shutil.rmtree('docs/api', ignore_errors=True); c=pathlib.Path('pyproject.toml').read_text(encoding='utf-8'); m=re.search(r'(?m)^name\\s*=\\s*\"([^\"]+)\"', c); assert m, 'project.name not found in pyproject.toml.'; p=m.group(1).replace('-', '_'); env=dict(os.environ); env['SPHINX_APIDOC_OPTIONS']='show-inheritance'; subprocess.check_call(['uv','run','sphinx-apidoc','-f','--remove-old','-o','docs_sphinx/apidoc',f'src/{p}',f'src/{p}/tests'], env=env); subprocess.check_call(['uv','run','sphinx-build','-b','html','docs_sphinx','docs/api'])"
 
 # Audit dependencies for known vulnerabilities.
 pip-audit:
@@ -49,6 +46,5 @@ pip-audit:
 # Build standalone executable with PyInstaller.
 build:
     uv sync --extra build --extra dev
-    if (Test-Path build) { Remove-Item -Recurse -Force build }
-    if (Test-Path dist) { Remove-Item -Recurse -Force dist }
+    uv run python -c "import shutil; shutil.rmtree('build', ignore_errors=True); shutil.rmtree('dist', ignore_errors=True)"
     uv run pyinstaller build.spec
