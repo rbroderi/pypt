@@ -1,28 +1,36 @@
 # pypt
 
-Bootstrap a new Python project with best-practice tooling — runnable with a single command:
+Bootstrap a new Python project with best-practice tooling,
+runnable with a single command:
 
 ```sh
 uvx pypt my-project
 ```
 
-`pypt` is the Python replacement for `init.ps1`. It scaffolds a fully-configured Python
-project using the same conventions seen in
+`pypt` is the Python replacement for `init.ps1`.
+It scaffolds a fully-configured Python project using the same conventions seen in
 [Repo2xml](https://github.com/rbroderi/Repo2xml).
 
 ## Features
 
 - Runs `uv init --lib` to create the project skeleton
-- Writes an opinionated `pyproject.toml` (calver, beartype, ruff, basedpyright, ty, coverage)
+- Writes an opinionated `pyproject.toml`
+  (calver, beartype, ruff, basedpyright, ty, coverage)
 - Creates a smoke test under `src/<package>/tests/`
 - Creates a virtual environment via `uv venv`
 - Creates `.gitignore`, `.yamllint`, and `.vscode/settings.json`
-- Creates a `justfile` and `.justfiles/` sub-recipes (prek, license, github-actions, clean)
+- Creates a `justfile` and `.justfiles/` sub-recipes (prek, license, github-actions)
+- Creates docs/build scaffolding (`docs/`, `docs_sphinx/`, `zensical.toml`, `build.spec`)
+- Creates `.secrets.baseline` alongside pre-commit config for detect-secrets
 - Optionally downloads a license from [scancode-licensedb](https://scancode-licensedb.aboutcode.org/)
-- Optionally installs [prek](https://github.com/rbroderi/prek) and writes `.pre-commit-config.yaml`
-  with all checks from Repo2xml (ssort, ruff, basedpyright, ty, vulture, deptry, pip-audit, coverage-100, …)
-- Optionally generates GitHub Actions workflows (lint-format, tests, typecheck, quality-security, publish-pypi)
+- Optionally installs [prek](https://github.com/rbroderi/prek)
+  and writes `.pre-commit-config.yaml`
+  with all checks from Repo2xml
+  (ssort, ruff, basedpyright, ty, vulture, deptry, pip-audit, coverage-100, …)
+- Optionally generates GitHub Actions workflows
+  (lint-format, tests, typecheck, quality-security, publish-pypi, docs)
   and `dependabot.yml`
+- Runs `uv sync --extra dev --extra docs --extra build` by default to generate `uv.lock`
 
 ## Prerequisites
 
@@ -31,7 +39,7 @@ project using the same conventions seen in
 
 ## Usage
 
-```
+```text
 uvx pypt [OPTIONS] [PROJECT_NAME]
 
 positional arguments:
@@ -47,6 +55,7 @@ options:
   --no-license          Skip the interactive license selection step
   --no-prek             Skip prek / pre-commit setup
   --no-github-actions   Skip GitHub Actions workflow generation
+  --no-sync             Skip final uv sync/lockfile generation
 ```
 
 ### Examples
@@ -66,7 +75,7 @@ uvx pypt my-lib -p 3.13 -d "A cool library" --no-license --no-prek --no-github-a
 
 `pypt` keeps all its boilerplate in `src/pypt/templates/`:
 
-```
+```text
 src/pypt/templates/
 ├── pyproject.toml.tmpl          # pyproject.toml skeleton
 ├── test_smoke.py.tmpl           # smoke test
@@ -78,11 +87,18 @@ src/pypt/templates/
 │   ├── prek.just.tmpl           # just prek-init recipe
 │   ├── license.just.tmpl        # just license recipe
 │   ├── github_actions.just.tmpl # just github-actions-init recipe
-│   └── clean.just.tmpl          # just clean recipe
 ├── pre-commit-config.yaml.tmpl  # .pre-commit-config.yaml
+├── docs/
+│   ├── index.md.tmpl            # docs site landing page
+│   └── python-api.md.tmpl       # API docs page
+├── docs_sphinx/
+│   └── conf.py.tmpl             # Sphinx configuration
+├── zensical.toml.tmpl           # Zensical site config
+├── build.spec.tmpl              # PyInstaller spec template
 └── github/
     ├── dependabot.yml.tmpl
     └── workflows/
+    ├── docs.yml.tmpl
         ├── lint-format.yml.tmpl
         ├── publish-pypi.yml.tmpl
         ├── quality-security.yml.tmpl

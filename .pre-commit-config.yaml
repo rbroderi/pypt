@@ -1,5 +1,5 @@
 default_language_version:
-  python: python{{python_version}}
+  python: python3.14
 repos:
   - repo: local
     hooks:
@@ -30,7 +30,7 @@ repos:
       - id: check-added-large-files
         exclude: ^tests/media/.*\.cbz$
       - id: debug-statements
-        language_version: python{{python_version}}
+        language_version: python3.14
       - id: check-executables-have-shebangs
       - id: check-shebang-scripts-are-executable
   - repo: https://github.com/google/yamlfmt
@@ -52,7 +52,7 @@ repos:
     hooks:
       - id: shfmt
   - repo: https://github.com/crate-ci/typos
-    rev: v1.45.0
+    rev: v1.45.1
     hooks:
       - id: typos
   - repo: https://github.com/executablebooks/mdformat
@@ -75,14 +75,14 @@ repos:
     rev: v3.21.2
     hooks:
       - id: pyupgrade
-        language_version: python{{python_version}}
-        args: [{{py_flag}}, --keep-runtime-typing]
+        language_version: python3.14
+        args: [--py314-plus, --keep-runtime-typing]
         files: ^(src|tests)/.*\.py$
   - repo: https://github.com/hadialqattan/pycln
     rev: v2.6.0
     hooks:
       - id: pycln
-        language_version: python{{python_version}}
+        language_version: python3.14
         args: [src, tests]
         pass_filenames: false
         always_run: true
@@ -91,16 +91,16 @@ repos:
     rev: v0.15.10
     hooks:
       - id: ruff-check
-        language_version: python{{python_version}}
+        language_version: python3.14
         args: [--fix, --exclude, typings]
         files: ^(src|tests)/.*\.py$
       - id: ruff-format
-        language_version: python{{python_version}}
+        language_version: python3.14
         args: [--exclude, typings]
         files: ^(src|tests)/.*\.py$
       - id: ruff-check
         name: ruff-check-post-format
-        language_version: python{{python_version}}
+        language_version: python3.14
         args: [--exclude, typings]
         files: ^(src|tests)/.*\.py$
   - repo: local
@@ -114,8 +114,8 @@ repos:
       - id: vulture
         name: vulture
         entry: |
-          uvx --python {{python_version}} vulture src --min-confidence 80 --ignore-names
-          dst,secure,httponly,samesite,unc_path,package_family_name,logo44x44
+          uvx --python 3.14 vulture src --min-confidence 80 --ignore-names
+          dst,secure,httponly,samesite,unc_path,package_family_name,logo44x44,a,n,py,exc_type,tb
         language: system
         pass_filenames: false
         always_run: true
@@ -136,7 +136,7 @@ repos:
         stages: [pre-commit]
       - id: basedpyright
         name: basedpyright
-        entry: uvx basedpyright --level error
+        entry: uvx basedpyright
         language: system
         pass_filenames: false
         always_run: true
@@ -157,7 +157,7 @@ repos:
         stages: [pre-commit]
       - id: coverage-100
         name: coverage-100
-        entry: uv run pytest --doctest-modules --cov=src/{{package_name}} --cov-report=term-missing --cov-fail-under=100 src/{{package_name}}
+        entry: uv run pytest --doctest-modules --cov=src/pypt --cov-report=term-missing --cov-fail-under=100 src/pypt
         language: system
         pass_filenames: false
         always_run: true
@@ -166,6 +166,6 @@ repos:
     rev: v1.5.0
     hooks:
       - id: detect-secrets
-        language_version: python{{python_version}}
+        language_version: python3.14
         args: ["--baseline", ".secrets.baseline"]
         stages: [pre-commit]

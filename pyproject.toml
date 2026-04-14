@@ -3,16 +3,15 @@ name = "pypt"
 version = "2026.4.13.0"
 description = "Bootstrap a new Python project with best-practice tooling."
 readme = "README.md"
-license = "LGPL-3.0-or-later"
+license = "GPL-3.0-or-later"
 authors = [{ name = "rbroderi", email = "rbroderi@gmail.com" }]
-requires-python = ">=3.11"
+requires-python = ">=3.13"
 classifiers = [
   "License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)",
   "Operating System :: OS Independent",
   "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.11",
-  "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
 ]
 dependencies = []
 
@@ -52,7 +51,7 @@ reportUnknownMemberType = "none"
 
 [tool.ruff]
 line-length = 120
-target-version = "py311"
+target-version = "py313"
 
 [tool.ruff.lint.isort]
 force-single-line = true
@@ -61,5 +60,5 @@ force-single-line = true
 source = ["src/pypt"]
 omit = ["src/pypt/tests/*"]
 
-[tool.ty.src]
-exclude = ["typings"]
+[tool.pyrefly]
+permissive-ignores = true

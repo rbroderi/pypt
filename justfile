@@ -1,10 +1,4 @@
-﻿set shell := ["powershell", "-NoProfile", "-Command"]
-
-import '.justfiles/init.just'
-import '.justfiles/license.just'
-import '.justfiles/prek.just'
-import '.justfiles/github_actions.just'
-import '.justfiles/clean.just'
+set shell := ["powershell", "-NoProfile", "-Command"]
 
 _default:
     @just --list
