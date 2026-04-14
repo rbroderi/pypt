@@ -45,5 +45,9 @@ def test_setup_github_actions(tmp_path: Path) -> None:
     assert (tmp_path / ".github" / "dependabot.yml").exists()
     tests_workflow = (tmp_path / ".github" / "workflows" / "tests.yml").read_text(encoding="utf-8")
     docs_workflow = (tmp_path / ".github" / "workflows" / "docs.yml").read_text(encoding="utf-8")
+    release_workflow = (tmp_path / ".github" / "workflows" / "github-release.yml").read_text(encoding="utf-8")
+    sphinx_api_workflow = (tmp_path / ".github" / "workflows" / "sphinx-api.yml").read_text(encoding="utf-8")
     assert "3.13" in tests_workflow
     assert "3.13" in docs_workflow
+    assert "3.13" in release_workflow
+    assert "3.13" in sphinx_api_workflow

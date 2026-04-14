@@ -157,6 +157,8 @@ def test_pypt_cli_subprocess_full_flow_with_network(tmp_path: Path) -> None:
         project_dir / ".github" / "workflows" / "quality-security.yml",
         project_dir / ".github" / "workflows" / "lint-format.yml",
         project_dir / ".github" / "workflows" / "publish-pypi.yml",
+        project_dir / ".github" / "workflows" / "github-release.yml",
+        project_dir / ".github" / "workflows" / "sphinx-api.yml",
         project_dir / "src" / package_name / "tests" / "test_smoke.py",
     ]
     for path in expected:

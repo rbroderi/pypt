@@ -27,7 +27,8 @@ It scaffolds a fully-configured Python project.
   (ssort, ruff, basedpyright, pyrefly,
   vulture, deptry, pip-audit, coverage-100, …)
 - Optionally generates GitHub Actions workflows
-  (lint-format, tests, typecheck, quality-security, publish-pypi, docs)
+  (lint-format, tests, typecheck, quality-security, publish-pypi,
+  docs, sphinx-api, github-release)
   and `dependabot.yml`
 - Runs `uv sync --extra dev --extra docs --extra build` by default to generate `uv.lock`
 
@@ -76,29 +77,27 @@ uvx pyptmpl my-lib -p 3.13 -d "A cool library" --no-license --no-prek --no-githu
 
 ```text
 src/pyptmpl/templates/
-├── pyproject.toml.tmpl          # pyproject.toml skeleton
-├── test_smoke.py.tmpl           # smoke test
-├── gitignore.tmpl               # .gitignore entries
-├── yamllint.tmpl                # .yamllint config
-├── vscode_settings.json.tmpl    # .vscode/settings.json
-├── justfile.tmpl                # root justfile
-├── pre-commit-config.yaml.tmpl  # .pre-commit-config.yaml
-├── docs/
-│   ├── index.md.tmpl            # docs site landing page
-│   └── python-api.md.tmpl       # API docs page
-├── docs_sphinx/
-│   └── conf.py.tmpl             # Sphinx configuration
-├── zensical.toml.tmpl           # Zensical site config
-├── build.spec.tmpl              # PyInstaller spec template
-└── github/
-    ├── dependabot.yml.tmpl
-    └── workflows/
-    ├── docs.yml.tmpl
-        ├── lint-format.yml.tmpl
-        ├── publish-pypi.yml.tmpl
-        ├── quality-security.yml.tmpl
-        ├── tests.yml.tmpl
-        └── typecheck.yml.tmpl
+├── pyproject.toml.tmpl                          # pyproject.toml skeleton
+├── test_smoke.py.tmpl                           # smoke test
+├── gitignore.tmpl                               # .gitignore entries
+├── yamllint.tmpl                                # .yamllint config
+├── vscode_settings.json.tmpl                    # .vscode/settings.json
+├── justfile.tmpl                                # root justfile
+├── pre-commit-config.yaml.tmpl                  # .pre-commit-config.yaml
+├── docs/index.md.tmpl                           # docs site landing page
+├── docs/python-api.md.tmpl                      # API docs page
+├── docs_sphinx/conf.py.tmpl                     # Sphinx configuration
+├── zensical.toml.tmpl                           # Zensical site config
+├── build.spec.tmpl                              # PyInstaller spec template
+├── github/dependabot.yml.tmpl
+├── github/workflows/github-release.yml.tmpl
+├── github/workflows/docs.yml.tmpl
+├── github/workflows/lint-format.yml.tmpl
+├── github/workflows/publish-pypi.yml.tmpl
+├── github/workflows/quality-security.yml.tmpl
+├── github/workflows/sphinx-api.yml.tmpl
+├── github/workflows/tests.yml.tmpl
+└── github/workflows/typecheck.yml.tmpl
 ```
 
 Template variables use `{{VARNAME}}` syntax. Add or modify templates to customize

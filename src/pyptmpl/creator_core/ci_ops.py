@@ -1,7 +1,7 @@
 """Pre-commit and CI automation setup operations."""
 
-from pathlib import Path
 from collections.abc import Callable
+from pathlib import Path
 
 
 def setup_prek(
@@ -72,6 +72,14 @@ def setup_github_actions(
     )
     (workflows_dir / "docs.yml").write_text(
         render_template(load_template("github/workflows/docs.yml.tmpl"), python_version=pv),
+        encoding="utf-8",
+    )
+    (workflows_dir / "github-release.yml").write_text(
+        render_template(load_template("github/workflows/github-release.yml.tmpl"), python_version=pv),
+        encoding="utf-8",
+    )
+    (workflows_dir / "sphinx-api.yml").write_text(
+        render_template(load_template("github/workflows/sphinx-api.yml.tmpl"), python_version=pv),
         encoding="utf-8",
     )
     print(f"Created GitHub automation files under {github_dir}")
