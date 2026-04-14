@@ -70,9 +70,7 @@ def init_project(
         project_dir = cwd / candidate
         if project_dir.is_dir():
             return project_dir
-    raise SystemExit(
-        f"error: project directory not found after 'uv init' for '{project_name}'"
-    )
+    raise SystemExit(f"error: project directory not found after 'uv init' for '{project_name}'")
 
 
 def write_pyproject(
@@ -117,9 +115,7 @@ def create_smoke_test(
     tests_dir = project_dir / "src" / package_name / "tests"
     tests_dir.mkdir(parents=True, exist_ok=True)
     smoke_test = tests_dir / "test_smoke.py"
-    content = render_template(
-        load_template("test_smoke.py.tmpl"), package_name=package_name
-    )
+    content = render_template(load_template("test_smoke.py.tmpl"), package_name=package_name)
     smoke_test.write_text(content, encoding="utf-8")
     print(f"Created smoke test at {smoke_test}")
 
@@ -196,9 +192,7 @@ def setup_typos(project_dir: Path, load_template: Callable[[str], str]) -> None:
 
 def setup_justfiles(project_dir: Path, load_template: Callable[[str], str]) -> None:
     """Create a single root justfile."""
-    (project_dir / "justfile").write_text(
-        load_template("justfile.tmpl"), encoding="utf-8"
-    )
+    (project_dir / "justfile").write_text(load_template("justfile.tmpl"), encoding="utf-8")
     print(f"Created justfile in {project_dir}")
 
 
@@ -219,20 +213,14 @@ def setup_docs_build_assets(
         encoding="utf-8",
     )
     (docs_dir / "python-api.md").write_text(
-        render_template(
-            load_template("docs/python-api.md.tmpl"), package_name=package_name
-        ),
+        render_template(load_template("docs/python-api.md.tmpl"), package_name=package_name),
         encoding="utf-8",
     )
     (docs_sphinx_dir / "conf.py").write_text(
-        render_template(
-            load_template("docs_sphinx/conf.py.tmpl"), package_name=package_name
-        ),
+        render_template(load_template("docs_sphinx/conf.py.tmpl"), package_name=package_name),
         encoding="utf-8",
     )
-    (project_dir / "zensical.toml").write_text(
-        load_template("zensical.toml.tmpl"), encoding="utf-8"
-    )
+    (project_dir / "zensical.toml").write_text(load_template("zensical.toml.tmpl"), encoding="utf-8")
     (project_dir / "build.spec").write_text(
         render_template(load_template("build.spec.tmpl"), package_name=package_name),
         encoding="utf-8",
@@ -240,16 +228,12 @@ def setup_docs_build_assets(
     print(f"Created docs/build scaffolding files in {project_dir}")
 
 
-def infer_python_version_from_pyproject(
-    project_dir: Path, default: str, *, strict: bool = False
-) -> str:
+def infer_python_version_from_pyproject(project_dir: Path, default: str, *, strict: bool = False) -> str:
     """Infer major.minor Python version from pyproject.toml."""
     pyproject = project_dir / "pyproject.toml"
     if not pyproject.exists():
         if strict:
-            raise SystemExit(
-                "error: pyproject.toml not found. Run this from your project root."
-            )
+            raise SystemExit("error: pyproject.toml not found. Run this from your project root.")
         return default
 
     content = pyproject.read_text(encoding="utf-8")
@@ -262,16 +246,12 @@ def infer_python_version_from_pyproject(
     return default
 
 
-def infer_project_name_from_pyproject(
-    project_dir: Path, *, strict: bool = False
-) -> str | None:
+def infer_project_name_from_pyproject(project_dir: Path, *, strict: bool = False) -> str | None:
     """Infer project.name from pyproject.toml."""
     pyproject = project_dir / "pyproject.toml"
     if not pyproject.exists():
         if strict:
-            raise SystemExit(
-                "error: pyproject.toml not found. Run this from your project root."
-            )
+            raise SystemExit("error: pyproject.toml not found. Run this from your project root.")
         return None
 
     content = pyproject.read_text(encoding="utf-8")
@@ -284,9 +264,7 @@ def infer_project_name_from_pyproject(
     return None
 
 
-def infer_package_name_from_pyproject(
-    project_dir: Path, *, strict: bool = False
-) -> str | None:
+def infer_package_name_from_pyproject(project_dir: Path, *, strict: bool = False) -> str | None:
     """Infer import package name from project.name in pyproject.toml."""
     project_name = infer_project_name_from_pyproject(project_dir, strict=strict)
     if project_name is None:

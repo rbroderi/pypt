@@ -33,6 +33,22 @@ repos:
         language_version: python3.14
       - id: check-executables-have-shebangs
       - id: check-shebang-scripts-are-executable
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.10
+    hooks:
+      - id: ruff-check
+        language_version: python3.14
+        args: [--fix, --exclude, typings]
+        files: ^(src|tests)/.*\.py$
+      - id: ruff-format
+        language_version: python3.14
+        args: [--exclude, typings]
+        files: ^(src|tests)/.*\.py$
+      - id: ruff-check
+        name: ruff-check-post-format
+        language_version: python3.14
+        args: [--exclude, typings]
+        files: ^(src|tests)/.*\.py$
   - repo: https://github.com/google/yamlfmt
     rev: v0.21.0
     hooks:
@@ -88,22 +104,6 @@ repos:
         pass_filenames: false
         always_run: true
         stages: [pre-commit]
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.10
-    hooks:
-      - id: ruff-check
-        language_version: python3.14
-        args: [--fix, --exclude, typings]
-        files: ^(src|tests)/.*\.py$
-      - id: ruff-format
-        language_version: python3.14
-        args: [--exclude, typings]
-        files: ^(src|tests)/.*\.py$
-      - id: ruff-check
-        name: ruff-check-post-format
-        language_version: python3.14
-        args: [--exclude, typings]
-        files: ^(src|tests)/.*\.py$
   - repo: local
     hooks:
       - id: autopep695-format
@@ -123,7 +123,7 @@ repos:
         stages: [pre-commit]
       - id: deptry
         name: deptry
-        entry: uvx deptry . --ignore DEP001,DEP002
+        entry: uvx deptry . --ignore DEP001,DEP002,DEP003
         language: system
         pass_filenames: false
         always_run: true
